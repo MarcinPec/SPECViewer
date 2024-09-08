@@ -48,7 +48,7 @@ class SetApp(customtkinter.CTk):
 
         def os_details():
             return CTkMessagebox(self.home, title="OS Details",
-                                 message="UNDER CONSTRUCTION",
+                                 message=engine.SpecView("os_d"),
                                  option_1="Close",
                                  fg_color="transparent",
                                  title_color="red",
@@ -61,7 +61,7 @@ class SetApp(customtkinter.CTk):
 
         def cpu_details():
             return CTkMessagebox(self.home, title="CPU Details",
-                                 message="UNDER CONSTRUCTION",
+                                 message=engine.SpecView("cpu_d"),
                                  option_1="Close",
                                  fg_color="transparent",
                                  title_color="red",
@@ -105,7 +105,7 @@ class SetApp(customtkinter.CTk):
         title_label.grid(row=0, column=1)
 
         # Version banner
-        version_label = customtkinter.CTkLabel(self.home, text="v.0.1", font=('Utah Bold', 15))
+        version_label = customtkinter.CTkLabel(self.home, text="v.0.2", font=('Utah Bold', 15))
         version_label.grid(row=1, column=1)
 
         # Exit button
