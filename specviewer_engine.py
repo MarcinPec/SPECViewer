@@ -2,6 +2,9 @@ import psutil
 import cpuinfo
 import win32api
 import GPUtil
+import wmi
+from mem_form_database import memory_types as mem_typ
+from mem_form_database import form_factors as factors
 
 
 class SpecView:
@@ -43,12 +46,16 @@ class SpecView:
     @staticmethod
     def cpu_view_det():
         cpu_i = cpuinfo.get_cpu_info()
+        cpu_vendor = cpu_i.get("vendor_id_raw")
+        cpu_arch = cpu_i.get('arch')
         cpu_l2 = cpu_i.get('l2_cache_size', 'N/A')
         cpu_l3 = cpu_i.get('l3_cache_size', 'N/A')
-        cpu_turbo = psutil.cpu_freq().max
-        result = (f"Cores: {psutil.cpu_count(logical=False)}\n"
+        cpu_freq = cpu_i["hz_advertised_friendly"]
+        result = (f"CPU Vendor: {cpu_vendor}\n"
+                  f"Architecture: {cpu_arch}\n"
+                  f"Cores: {psutil.cpu_count(logical=False)}\n"
                   f"Logical cores: {psutil.cpu_count(logical=True)}\n"
-                  f"Turbo: {cpu_turbo/1000:.2f} GHz\n"
+                  f"Turbo: {cpu_freq}\n"
                   f"L2 Cache: {round(cpu_l2/1000000)} MB\n"
                   f"L3 Cache: {round(cpu_l3/1000000)} MB")
         return result
@@ -57,6 +64,23 @@ class SpecView:
     def ram_view():
         ram_i = psutil.virtual_memory()
         result = f"{round(ram_i.total/1024**3)} GB"
+        return result
+
+    @staticmethod
+    def ram_view_det():
+        c = wmi.WMI()
+        ram_i_det = c.Win32_PhysicalMemory()
+        result = ""
+
+        for memory in ram_i_det:
+            smbios_memory_type = mem_typ.get(memory.SMBIOSMemoryType)
+            form_factor = factors.get(memory.FormFactor)
+
+            result += f"Slot: {memory.BankLabel}\n"
+            result += f"Type: {smbios_memory_type} ({form_factor})\n"
+            result += f"Size: {int(memory.Capacity) / (1024 ** 3):.2f} GB\n"
+            result += f"Frequency: {memory.Speed} MHz\n\n"
+
         return result
 
     @staticmethod
@@ -80,8 +104,10 @@ class SpecView:
             return f'{self.cpu_view_det()}'
         if self.group == "ram":
             return f'{self.ram_view()}'
+        if self.group == "ram_d":
+            return f'{self.ram_view_det()}'
         if self.group == "gpu":
             return f'{self.gpu_view()}'
 
-test = SpecView("cpu_d")
+test = SpecView("ram_d")
 print(test)

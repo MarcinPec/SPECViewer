@@ -74,7 +74,7 @@ class SetApp(customtkinter.CTk):
 
         def ram_details():
             return CTkMessagebox(self.home, title="RAM Details",
-                                 message="UNDER CONSTRUCTION",
+                                 message=engine.SpecView("ram_d"),
                                  option_1="Close",
                                  fg_color="transparent",
                                  title_color="red",
@@ -101,11 +101,11 @@ class SetApp(customtkinter.CTk):
                                  )
 
         # Title label + logo
-        title_label = customtkinter.CTkLabel(self.home, text="", image=spec_logo)
+        title_label = customtkinter.CTkLabel(self.home, text="", image=spec_logo, bg_color="#808080")
         title_label.grid(row=0, column=1)
 
         # Version banner
-        version_label = customtkinter.CTkLabel(self.home, text="v.0.2", font=('Utah Bold', 15))
+        version_label = customtkinter.CTkLabel(self.home, text="v.0.3", font=('Utah Bold', 15))
         version_label.grid(row=1, column=1)
 
         # Exit button
@@ -116,7 +116,7 @@ class SetApp(customtkinter.CTk):
 
         # OS
         os_button = customtkinter.CTkButton(master=self.home, image=os_logo, text="", fg_color="transparent",
-                                            hover_color="red", command=os_details)
+                                            hover_color="red", command=os_details, width=350)
         os_label = customtkinter.CTkLabel(self.home, text='OPERATING SYSTEM:', font=('Chiller', 35), text_color="red", compound="top")
         os_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('os'), font=('Utah Bold', 22), compound="top")
         os_button.grid(row=2, column=1, pady=3)
@@ -126,7 +126,7 @@ class SetApp(customtkinter.CTk):
 
         # CPU
         cpu_button = customtkinter.CTkButton(master=self.home, image=cpu_logo, text="", fg_color="transparent",
-                                             hover_color="red", command=cpu_details)
+                                             hover_color="red", command=cpu_details, width=350)
         cpu_label = customtkinter.CTkLabel(self.home, text='CPU:', font=('Chiller', 35), text_color="red", compound="top")
         cpu_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('cpu'), font=('Utah Bold', 22), compound="top")
         cpu_button.grid(row=3, column=1, pady=3)
@@ -136,7 +136,7 @@ class SetApp(customtkinter.CTk):
 
         # RAM
         ram_button = customtkinter.CTkButton(master=self.home, image=ram_logo, text="", fg_color="transparent",
-                                             hover_color="red", command=ram_details)
+                                             hover_color="red", command=ram_details, width=350)
         ram_label = customtkinter.CTkLabel(self.home, text='RAM:', font=('Chiller', 35), text_color="red", compound="top")
         ram_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('ram'), font=('Utah Bold', 22), compound="top")
         ram_button.grid(row=4, column=1, pady=3)
@@ -146,7 +146,7 @@ class SetApp(customtkinter.CTk):
 
         # GPU
         gpu_button = customtkinter.CTkButton(master=self.home, image=gpu_logo, text="", fg_color="transparent",
-                                             hover_color="red", command=gpu_details)
+                                             hover_color="red", command=gpu_details, width=350)
         gpu_label = customtkinter.CTkLabel(self.home, text='GPU:', font=('Chiller', 35), text_color="red",  compound="top")
         gpu_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('gpu'), font=('Utah Bold', 22), compound="top")
         gpu_button.grid(row=5, column=1, pady=3)
