@@ -1,10 +1,64 @@
 import psutil
 import cpuinfo
-import win32api
 import GPUtil
 import wmi
-from mem_form_database import memory_types as mem_typ
-from mem_form_database import form_factors as factors
+from datetime import datetime
+
+
+memory_types = {
+    0: "Unknown",
+    1: "Other",
+    2: "DRAM",
+    3: "Synchronous DRAM",
+    4: "Cache DRAM",
+    5: "EDO",
+    6: "EDRAM",
+    7: "VRAM",
+    8: "SRAM",
+    9: "RAM",
+    10: "ROM",
+    11: "Flash",
+    12: "EEPROM",
+    13: "FEPROM",
+    14: "EPROM",
+    15: "CDRAM",
+    16: "3DRAM",
+    17: "SDRAM",
+    18: "SGRAM",
+    19: "RDRAM",
+    20: "DDR",
+    21: "DDR2",
+    22: "DDR2 FB-DIMM",
+    24: "DDR3",
+    26: "DDR4"
+}
+
+form_factors = {
+    0: "Unknown",
+    1: "Other",
+    2: "SIP",
+    3: "DIP",
+    4: "ZIP",
+    5: "SOJ",
+    6: "Proprietary",
+    7: "SIMM",
+    8: "DIMM",
+    9: "TSOP",
+    10: "PGA",
+    11: "RIMM",
+    12: "SODIMM",
+    13: "SRIMM",
+    14: "SMD",
+    15: "SSMP",
+    16: "QFP",
+    17: "TQFP",
+    18: "SOIC",
+    19: "LCC",
+    20: "PLCC",
+    21: "BGA",
+    22: "FPBGA",
+    23: "LGA"
+}
 
 
 class SpecView:
@@ -12,52 +66,23 @@ class SpecView:
         self.group = group
 
     @staticmethod
-    def os_view():
-        version_info = win32api.GetVersionEx(1)
-        major, minor, build, platform, text = version_info[:5]
-        os_version = f"Windows {major}"
-        return os_version
-
-    @staticmethod
-    def os_view_det():
-        version_info1 = win32api.GetVersionEx(1)
-        major, minor, build, platform, text = version_info1[:5]
-        version_info2a = win32api.GetSystemMetrics(0)
-        version_info2b =  win32api.GetSystemMetrics(1)
-        version_info3 = win32api.GetUserName()
-        version_info4 = win32api.GetComputerName()
-        os_version1 = (f"Windows {major}.{minor}\n"
-                      f"Build ver.: {build}")
-        os_version2 = f"Screen res.: {version_info2a}x{version_info2b}"
-        os_version3 = (f"User name: {version_info3}\n"
-                       f"PC name: {version_info4}")
-
-        return (f'{os_version1}\n'
-                f'{os_version2}\n'
-                f'{os_version3}')
-
-    @staticmethod
     def cpu_view():
-        cpu_i = cpuinfo.get_cpu_info()
-        result = f"{cpu_i['brand_raw']} @ {round(psutil.cpu_freq().max/1000, 2)} GHz"
-
+        cpu_i = wmi.WMI()
+        result = ""
+        for data in cpu_i.Win32_Processor():
+            result += f"{data.Name}"
         return result
 
     @staticmethod
     def cpu_view_det():
-        cpu_i = cpuinfo.get_cpu_info()
-        cpu_vendor = cpu_i.get("vendor_id_raw")
-        cpu_arch = cpu_i.get('arch')
-        cpu_l2 = cpu_i.get('l2_cache_size', 'N/A')
-        cpu_l3 = cpu_i.get('l3_cache_size', 'N/A')
-        cpu_freq = cpu_i["hz_advertised_friendly"]
-        result = (f"CPU Vendor: {cpu_vendor}\n"
-                  f"Architecture: {cpu_arch}\n"
-                  f"Cores: {psutil.cpu_count(logical=False)}\n"
-                  f"Logical cores: {psutil.cpu_count(logical=True)}\n"
-                  f"Turbo: {cpu_freq}\n"
-                  f"L2 Cache: {round(cpu_l2/1000000)} MB\n"
-                  f"L3 Cache: {round(cpu_l3/1000000)} MB")
+        cpu_i = wmi.WMI()
+        result = ""
+        for cpu in cpu_i.Win32_Processor():
+            result += (f'Name: {cpu.Name}\n'
+                       f'Base Clock Speed: {cpu.MaxClockSpeed} MHz\n'
+                       f'Turbo Clock Speed: {cpu.CurrentClockSpeed} MHz\n'
+                       f'L2 Cache Size: {cpu.L2CacheSize} KB\n'
+                       f'L3 Cache Size: {cpu.L3CacheSize} KB')
         return result
 
     @staticmethod
@@ -73,8 +98,8 @@ class SpecView:
         result = ""
 
         for memory in ram_i_det:
-            smbios_memory_type = mem_typ.get(memory.SMBIOSMemoryType)
-            form_factor = factors.get(memory.FormFactor)
+            smbios_memory_type = memory_types.get(memory.SMBIOSMemoryType)
+            form_factor = form_factors.get(memory.FormFactor)
 
             result += f"Slot: {memory.BankLabel}\n"
             result += f"Type: {smbios_memory_type} ({form_factor})\n"
@@ -90,14 +115,107 @@ class SpecView:
             return "No GPU detected."
         result = ""
         for gpu in gpu_i:
-            result += f"{gpu.name}, {round(gpu.memoryTotal/1000, 0)} GB\n"
+            result += f"{gpu.name}\n"
+        return result
+
+    @staticmethod
+    def gpu_view_det():
+        gpu_i = GPUtil.getGPUs()
+        if not gpu_i:
+            return "No GPU detected."
+        result = ""
+        for gpu in gpu_i:
+            result += (f"Name: {gpu.name}\n"
+                       f"ID: {gpu.id}\n"
+                       f"Driver: {gpu.driver}\n"
+                       f"Serial: {gpu.serial}\n"
+                       f"Load: {round(gpu.load,2) * 100}%\n"
+                       f"Memory used:  {gpu.memoryUsed}MB\n"
+                       f"Memory total: {gpu.memoryTotal}MB\n"
+                       f"Memory free: {gpu.memoryFree}MB\n"
+                       f"Temperature: {gpu.temperature}°C\n")
+        return result
+
+    @staticmethod
+    def mb_view():
+        mobo = wmi.WMI()
+        result = ""
+
+        for board in mobo.Win32_BaseBoard():
+            result += f" {board.Manufacturer}, {board.Product}"
+
+        return result
+
+    @staticmethod
+    def mb_view_det():
+        mobo = wmi.WMI()
+        raw_date = ""
+        result = ""
+        for bios_date in mobo.Win32_BIOS():
+            raw_date += f"{bios_date.ReleaseDate}"
+
+        date_str = raw_date.split('.')[0]
+        date_obj = datetime.strptime(date_str, "%Y%m%d%H%M%S")
+        formatted_date = date_obj.strftime("%d-%m-%Y")
+
+        for board in mobo.Win32_BaseBoard():
+            result += (f"Mod.: {board.Product}\n"
+                       f"Ver.: {board.Version}\n"
+                       f"Serial: {board.SerialNumber}\n")
+
+        for bios in mobo.Win32_BIOS():
+            result += (f"BIOS Name: {bios.Manufacturer}\n"
+                       f"BIOS Ver.: {bios.SMBIOSBIOSVersion}\n"
+                       f"BIOS Release Date: {formatted_date}")
+        return result
+
+    @staticmethod
+    def get_disk_info():
+        disk_info = psutil.disk_partitions()
+        disk_details = []
+
+        for partition in disk_info:
+            partition_info = {
+                "device": partition.device,
+                "mountpoint": partition.mountpoint,
+                "fstype": partition.fstype,
+                "opts": partition.opts
+            }
+
+            # Uzyskaj dane o wykorzystaniu dysku
+            usage = psutil.disk_usage(partition.mountpoint)
+            partition_info["total"] = usage.total
+            partition_info["used"] = usage.used
+            partition_info["free"] = usage.free
+            partition_info["percent"] = usage.percent
+
+            disk_details.append(partition_info)
+
+        return disk_details
+
+    def disc_view(self):
+        disk_details = self.get_disk_info()
+        result = ""
+        for disk in disk_details:
+            result += f" {disk['device']} - {disk['total'] / (1024 ** 3):.2f} GB\n"
+        return result
+
+    def disc_view_det(self):
+        disk_details = self.get_disk_info()
+        result = ""
+        for disk in disk_details:
+            result += (f"Device: {disk['device']}\n"
+                       f"Mountpoint: {disk['mountpoint']}\n"
+                       f"Filesystem type: {disk['fstype']}\n"
+                       f"Options: {disk['opts']}\n"
+                       f"Total size: {disk['total'] / (1024 ** 3):.2f} GB\n"
+                       f"Used space: {disk['used'] / (1024 ** 3):.2f} GB\n"
+                       f"Free space: {disk['free'] / (1024 ** 3):.2f} GB\n"
+                       f"-------------------\n")
+
         return result
 
     def __str__(self):
-        if self.group == "os":
-            return f'{self.os_view()}'
-        if self.group == "os_d":
-            return f'{self.os_view_det()}'
         if self.group == "cpu":
             return f'{self.cpu_view()}'
         if self.group == "cpu_d":
@@ -108,6 +226,16 @@ class SpecView:
             return f'{self.ram_view_det()}'
         if self.group == "gpu":
             return f'{self.gpu_view()}'
+        if self.group == "gpu_d":
+            return f'{self.gpu_view_det()}'
+        if self.group == "mb":
+            return f'{self.mb_view()}'
+        if self.group == "mb_d":
+            return f'{self.mb_view_det()}'
+        if self.group == "dsc":
+            return f'{self.disc_view()}'
+        if self.group == "dsc_d":
+            return f'{self.disc_view_det()}'
 
-test = SpecView("ram_d")
+test = SpecView('cpu_d')
 print(test)

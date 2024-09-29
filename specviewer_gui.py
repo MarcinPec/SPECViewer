@@ -1,12 +1,31 @@
-import customtkinter
 import specviewer_engine as engine
-import tooltip_engine as tip
-from PIL import Image
-from CTkMessagebox import CTkMessagebox
+from PIL import Image, ImageTk
+import tkinter as tk
+from tkinter import messagebox
 
 
-class SetApp(customtkinter.CTk):
+class ToolTip:
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tooltip = None
+        self.widget.bind("<Enter>", self.show_tooltip)
+        self.widget.bind("<Leave>", self.hide_tooltip)
 
+    def show_tooltip(self, event=None):
+        self.tooltip = tk.Toplevel(self.widget)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.geometry(f"+{event.x_root + 10}+{event.y_root + 10}")
+        label = tk.Label(self.tooltip, text=self.text, background="lightyellow", relief="solid", borderwidth=1)
+        label.pack()
+
+    def hide_tooltip(self, event=None):
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = None
+
+
+class SetApp(tk.Tk):
     def __init__(self, title, app_x, app_y):
         super().__init__()
 
@@ -23,145 +42,101 @@ class SetApp(customtkinter.CTk):
         # Prevent resizing the window
         self.resizable(False, False)
 
-        # Configure grid for layout management
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
         # Create a home frame and assign it to the grid
-        self.home = customtkinter.CTkFrame(self, fg_color='transparent')
+        self.home = tk.Frame(self)
         self.home.grid(row=0, column=0, sticky="n")  # Frame placed in the grid
 
-        # Configure rows for home frame
-        self.home.grid_rowconfigure(0, weight=4)
+        # Images loader - poprawiamy ładowanie obrazów i ich rozmiary
+        spec_logo_img = Image.open('images/specviewer_logo1.png').resize((310, 100))
+        spec_logo_img = ImageTk.PhotoImage(spec_logo_img)
 
-        # Images loader
-        spec_logo = customtkinter.CTkImage(Image.open(
-            'images/specviewer_logo1.png'), size=(300, 100))
-        os_logo = customtkinter.CTkImage(Image.open(
-            'images/os.png'), size=(200, 150))
-        cpu_logo = customtkinter.CTkImage(Image.open(
-            'images/cpu.png'), size=(200, 150))
-        ram_logo = customtkinter.CTkImage(Image.open(
-            'images/ram.png'), size=(200, 150))
-        gpu_logo = customtkinter.CTkImage(Image.open(
-            'images/gpu.png'), size=(200, 150))
+        os_logo_img = Image.open('images/os.png').resize((150, 100))
+        os_logo_img = ImageTk.PhotoImage(os_logo_img)
 
-        def os_details():
-            return CTkMessagebox(self.home, title="OS Details",
-                                 message=engine.SpecView("os_d"),
-                                 option_1="Close",
-                                 fg_color="transparent",
-                                 title_color="red",
-                                 button_color="transparent",
-                                 button_hover_color="red",
-                                 font=("Utah Bold", 15),
-                                 button_text_color="black",
-                                 button_width=350,
-                                 sound=True)
+        cpu_logo_img = Image.open('images/cpu.png').resize((150, 100))
+        cpu_logo_img = ImageTk.PhotoImage(cpu_logo_img)
+
+        ram_logo_img = Image.open('images/ram.png').resize((150, 100))
+        ram_logo_img = ImageTk.PhotoImage(ram_logo_img)
+
+        gpu_logo_img = Image.open('images/gpu.png').resize((150, 100))
+        gpu_logo_img = ImageTk.PhotoImage(gpu_logo_img)
+
+        mb_logo_img = Image.open('images/mb.png').resize((150, 100))
+        mb_logo_img = ImageTk.PhotoImage(mb_logo_img)
+
+        dsc_logo_img = Image.open('images/hdd.png').resize((150, 100))
+        dsc_logo_img = ImageTk.PhotoImage(dsc_logo_img)
+
+        def exit_app():
+            self.destroy()
 
         def cpu_details():
-            return CTkMessagebox(self.home, title="CPU Details",
-                                 message=engine.SpecView("cpu_d"),
-                                 option_1="Close",
-                                 fg_color="transparent",
-                                 title_color="red",
-                                 button_color="transparent",
-                                 button_hover_color="red",
-                                 font=("Utah Bold", 15),
-                                 button_text_color="black",
-                                 button_width=350,
-                                 sound=True)
+            messagebox.showinfo("CPU Details", engine.SpecView('cpu_d'))
 
         def ram_details():
-            return CTkMessagebox(self.home, title="RAM Details",
-                                 message=engine.SpecView("ram_d"),
-                                 option_1="Close",
-                                 fg_color="transparent",
-                                 title_color="red",
-                                 button_color="transparent",
-                                 button_hover_color="red",
-                                 font=("Utah Bold", 15),
-                                 button_text_color="black",
-                                 button_width=350,
-                                 sound=True
-                                 )
+            messagebox.showinfo("RAM Details", engine.SpecView('ram_d'))
 
         def gpu_details():
-            return CTkMessagebox(self.home, title="GPU Details",
-                                 message="UNDER CONSTRUCTION",
-                                 option_1="Close",
-                                 fg_color="transparent",
-                                 title_color="red",
-                                 button_color="transparent",
-                                 button_hover_color="red",
-                                 font=("Utah Bold", 15),
-                                 button_text_color="black",
-                                 button_width=350,
-                                 sound=True
-                                 )
+            messagebox.showinfo("GPU Details", engine.SpecView('gpu_d'))
+
+        def mb_details():
+            messagebox.showinfo("MOBO Details", engine.SpecView('mb_d'))
+
+        def dsc_details():
+            messagebox.showinfo("Discs Details", engine.SpecView('dsc_d'))
 
         # Title label + logo
-        title_label = customtkinter.CTkLabel(self.home, text="", image=spec_logo, bg_color="#808080")
+        title_label = tk.Label(self.home, image=spec_logo_img)  # Użycie załadowanego obrazu
         title_label.grid(row=0, column=1)
 
         # Version banner
-        version_label = customtkinter.CTkLabel(self.home, text="v.0.3", font=('Utah Bold', 15))
+        version_label = tk.Label(self.home, text="v.1.0 EA", font=('Utah Bold', 15))
         version_label.grid(row=1, column=1)
 
         # Exit button
-        exit_button = customtkinter.CTkButton(master=self.home, text="Exit", fg_color="transparent", hover_color="red",
-                                              font=('Utah Bold', 45), text_color="black")
+        exit_button = tk.Button(self.home, text="Exit", fg="red", font=('Utah Bold', 20), command=exit_app)
         exit_button.grid(row=0, column=3)
-        tip.ToolTip(exit_button, "Close this app")
-
-        # OS
-        os_button = customtkinter.CTkButton(master=self.home, image=os_logo, text="", fg_color="transparent",
-                                            hover_color="red", command=os_details, width=350)
-        os_label = customtkinter.CTkLabel(self.home, text='OPERATING SYSTEM:', font=('Chiller', 35), text_color="red", compound="top")
-        os_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('os'), font=('Utah Bold', 22), compound="top")
-        os_button.grid(row=2, column=1, pady=3)
-        #os_label.grid(row=1, column=2)
-        os_value.grid(row=2, column=3, pady=3)
-        tip.ToolTip(os_button, "Click for OS details...")
 
         # CPU
-        cpu_button = customtkinter.CTkButton(master=self.home, image=cpu_logo, text="", fg_color="transparent",
-                                             hover_color="red", command=cpu_details, width=350)
-        cpu_label = customtkinter.CTkLabel(self.home, text='CPU:', font=('Chiller', 35), text_color="red", compound="top")
-        cpu_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('cpu'), font=('Utah Bold', 22), compound="top")
+        cpu_button = tk.Button(self.home, image=cpu_logo_img, command=cpu_details)
+        cpu_label = tk.Label(self.home, text=engine.SpecView('cpu'))
         cpu_button.grid(row=3, column=1, pady=3)
-        #cpu_label.grid(row=2, column=2)
-        cpu_value.grid(row=3, column=3, pady=3)
-        tip.ToolTip(cpu_button, "Click for CPU details...")
+        cpu_label.grid(row=3, column=2, pady=3)
 
         # RAM
-        ram_button = customtkinter.CTkButton(master=self.home, image=ram_logo, text="", fg_color="transparent",
-                                             hover_color="red", command=ram_details, width=350)
-        ram_label = customtkinter.CTkLabel(self.home, text='RAM:', font=('Chiller', 35), text_color="red", compound="top")
-        ram_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('ram'), font=('Utah Bold', 22), compound="top")
-        ram_button.grid(row=4, column=1, pady=3)
-        #ram_label.grid(row=3, column=2)
-        ram_value.grid(row=4, column=3, pady=3)
-        tip.ToolTip(ram_button, "Click for RAM details...")
+        ram_button = tk.Button(self.home, image=ram_logo_img, command=ram_details)
+        ram_label=tk.Label(self.home, text=engine.SpecView('ram'))
+        ram_button.grid(row=4, column=1, pady=15)
+        ram_label.grid(row=4, column=2, pady=3)
 
         # GPU
-        gpu_button = customtkinter.CTkButton(master=self.home, image=gpu_logo, text="", fg_color="transparent",
-                                             hover_color="red", command=gpu_details, width=350)
-        gpu_label = customtkinter.CTkLabel(self.home, text='GPU:', font=('Chiller', 35), text_color="red",  compound="top")
-        gpu_value = customtkinter.CTkLabel(self.home, text=engine.SpecView('gpu'), font=('Utah Bold', 22), compound="top")
-        gpu_button.grid(row=5, column=1, pady=3)
-        #gpu_label.grid(row=4, column=2)
-        gpu_value.grid(row=5, column=3, pady=3)
-        tip.ToolTip(gpu_button, "Click for GPU details...")
+        gpu_button = tk.Button(self.home, image=gpu_logo_img, command=gpu_details)
+        gpu_label = tk.Label(self.home, text=engine.SpecView('gpu'))
+        gpu_button.grid(row=5, column=1, pady=15)
+        gpu_label.grid(row=5, column=2, pady=3)
+
+        # MB
+        mb_button = tk.Button(self.home, image=mb_logo_img, command=mb_details)
+        mb_label = tk.Label(self.home, text=engine.SpecView('mb'))
+        mb_button.grid(row=6, column=1, pady=15)
+        mb_label.grid(row=6, column=2, pady=3)
+
+        # DISC
+        dsc_button = tk.Button(self.home, image=dsc_logo_img, command=dsc_details)
+        dsc_label = tk.Label(self.home, text=engine.SpecView('dsc'))
+        dsc_button.grid(row=7, column=1, pady=15)
+        dsc_label.grid(row=7, column=2, pady=3)
+
+        # Aby obrazy nie zniknęły, trzeba je przypisać do atrybutu obiektu
+        self.spec_logo_img = spec_logo_img
+        self.os_logo_img = os_logo_img
+        self.cpu_logo_img = cpu_logo_img
+        self.ram_logo_img = ram_logo_img
+        self.gpu_logo_img = gpu_logo_img
+        self.mb_logo_img = mb_logo_img
+        self.dsc_logo_img = dsc_logo_img
 
 
-if __name__ == "__main__":
-    # Set the appearance and theme
-    customtkinter.set_appearance_mode("light")
-    customtkinter.set_default_color_theme("blue")
-
-    # Create an instance of the SetApp class
-    app = SetApp("SPECViewer", 1100, 800)
-
-    # Start the main loop
-    app.mainloop()
+app = SetApp("SPECViewer", 850, 800)
+app.mainloop()
